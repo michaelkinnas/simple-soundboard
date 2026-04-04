@@ -39,11 +39,7 @@ class SoundBox:
 
         self.sound_name = ttk.Label(self.box, text=self.file_name, width=35)
         self.sound_name.grid(row=1, column=0, columnspan=3)
-        # self.song_name.pack()
 
-        # self.play_button = ttk.Button(
-        #     self.box, text="Play", command=self.play_sound, width=15
-        # )
         self.play_button = tk.Button(
             self.box,
             text="Play",
@@ -53,11 +49,8 @@ class SoundBox:
             activeforeground="white",
             command=self.play_sound,
             width=10,
-            # height=1,
         )
         self.play_button.grid(column=0, row=2, sticky="ew")
-        # self.play_button.pack()
-        # self.play_button.place(x=100, y=100)
 
         self.stop_button = tk.Button(
             self.box,
@@ -70,7 +63,6 @@ class SoundBox:
             width=10,
         )
         self.stop_button.grid(column=1, row=2, sticky="ew")
-        # self.stop_button.pack()
 
         style = ttk.Style()
         style.configure("Thick.Horizontal.TProgressbar", thickness=10)
@@ -82,20 +74,17 @@ class SoundBox:
             style="Thick.Horizontal.TProgressbar",
         )
         self.progress_bar.grid(column=0, row=3, columnspan=2, sticky="ew")
-        # self.progress_bar.pack()
 
         self.playing_time_text = ttk.Label(
             self.box, text=f"000.00 / {self.total_duration_sec:.2f}", anchor="e"
         )
         self.playing_time_text.grid(column=0, row=4)
-        # self.playing_time_text.pack()
 
         self.repeat_var = tk.BooleanVar(value=False)
         self.repeat_tick = ttk.Checkbutton(
             self.box, text="Repeat", variable=self.repeat_var
         )
         self.repeat_tick.grid(column=1, row=4)
-        # self.repeat_tick.pack()
 
         self.volume_var = tk.IntVar(value=100)
         self.volume_bar = tk.Scale(
@@ -111,7 +100,7 @@ class SoundBox:
         self.delete_button = tk.Button(
             self.box, text="X", fg="red", command=self.delete_self
         )
-        self.delete_button.grid(row=4, column=4, padx=5)  # place wherever it fits
+        self.delete_button.grid(row=4, column=4, padx=5)
 
     def play_sound(self):
         # set initial volume
@@ -122,8 +111,8 @@ class SoundBox:
 
         self.sound.play()
 
-        # self.update_progress()
-        self.box.after(100, self.update_progress)  # delay start
+        # delay start
+        self.box.after(100, self.update_progress)
 
     def stop_sound(self):
         self.repeat_var.set(0)
@@ -134,7 +123,6 @@ class SoundBox:
 
     def update_progress(self):
         current = self.sound.get_time()
-        # total = self.sound.get_length()
 
         current_readable = max(0, current / 1000)
 

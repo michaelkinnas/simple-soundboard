@@ -27,7 +27,7 @@ def save_layout(boxes):
 
     file_path = filedialog.asksaveasfilename(
         title="Save file as...",
-        defaultextension=".txt",  # default file extension
+        defaultextension=".txt",
         filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
     )
 
@@ -64,7 +64,6 @@ def pause_all(boxes):
 
 def main():
     boxes = []
-    # make sound var whatever sound you want to play
 
     root = Tk()
     root.title("The most amazingest sound board in the known universe")
