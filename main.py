@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk, filedialog
 from sound import SoundBox
+import pickle
 
 
 def get_file():
@@ -11,9 +12,17 @@ def get_file():
     return file_path
 
 
-def add_sound(containter, file_path, boxes):
+def add_sound(container, file_path, boxes, volume=None, repeat=None):
     if file_path:
-        sound_box = SoundBox(containter, file_path, boxes, col=0, row=len(boxes) + 2)
+        sound_box = SoundBox(
+            container,
+            file_path,
+            boxes,
+            col=0,
+            row=len(boxes) + 2,
+            volume=volume,
+            repeat=repeat,
+        )
         boxes.append(sound_box)
 
 
@@ -23,33 +32,44 @@ def add_sound_process(container, boxes):
 
 
 def save_layout(boxes):
-    sound_file_paths = [x.get_filepath() + "\n" for x in boxes]
+    sounds = []
+    for soundbox in boxes:
+        settings = {
+            "file_path": soundbox.get_filepath() + "\n",
+            "volume": soundbox.volume_var.get(),
+            "repeat": soundbox.repeat_var.get(),
+        }
+        print(settings)
+        sounds.append(settings)
 
     file_path = filedialog.asksaveasfilename(
         title="Save file as...",
-        defaultextension=".txt",
-        filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
+        filetypes=[("All files", "*")],
     )
 
     if file_path:
-        with open(file_path, "w") as f:
-            f.writelines(sound_file_paths)
+        with open(file_path, "wb") as f:
+            pickle.dump(sounds, f)
 
 
 def load_layout(container, boxes):
     file_path = filedialog.askopenfilename(
         title="Select a sound list file",
-        filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
+        filetypes=[("All files", "*")],
     )
 
     if file_path:
-        with open(file_path, "r") as f:
-            file_paths = f.readlines()
+        with open(file_path, "rb") as f:
+            loaded_data = pickle.load(f)
 
-    file_paths = [x.strip() for x in file_paths]
-
-    for file_path in file_paths:
-        add_sound(container, file_path, boxes)
+        for sound in loaded_data:
+            add_sound(
+                container=container,
+                file_path=sound["file_path"].strip(),
+                boxes=boxes,
+                volume=sound["volume"],
+                repeat=sound["repeat"],
+            )
 
 
 def stop_all(boxes):

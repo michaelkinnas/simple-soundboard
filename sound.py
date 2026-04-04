@@ -13,6 +13,8 @@ class SoundBox:
         parent_list,
         col=0,
         row=0,
+        volume=None,
+        repeat=None,
     ):
         self.filepath = filepath
         self.column = col
@@ -101,6 +103,13 @@ class SoundBox:
             self.box, text="X", fg="red", command=self.delete_self
         )
         self.delete_button.grid(row=4, column=4, padx=5)
+
+        if volume is not None:
+            self.apply_volume(volume)
+            self.volume_bar.set(volume)
+
+        if repeat is not None:
+            self.repeat_var.set(value=repeat)
 
     def play_sound(self):
         # set initial volume
