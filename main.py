@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk, filedialog
+import tkinter as tk
 from sound import SoundBox
 import pickle
 
@@ -86,39 +87,70 @@ def main():
     boxes = []
 
     root = Tk()
-    root.title("The most amazingest sound board in the known universe")
-    root.resizable(False, True)
+    root.title("sssoundboard")
+    # root.resizable(False, True)
+    root.grid_rowconfigure(2, weight=1)  # row 2 grows vertically
+    root.grid_columnconfigure(0, weight=1)  # canvas column grows horizontally
+
+    top_toolbar = ttk.Frame(root)
+    top_toolbar.grid(
+        row=0,
+        column=0,
+    )
+    top_toolbar.grid_columnconfigure(0, weight=1)
+    top_toolbar.grid_columnconfigure(1, weight=1)
+    top_toolbar.grid_columnconfigure(2, weight=1)
 
     # toolbar
     add_button = ttk.Button(
-        root,
-        command=lambda: add_sound_process(container=root, boxes=boxes),
+        top_toolbar,
+        command=lambda: add_sound_process(container=scrollable_frame, boxes=boxes),
         text="Add sound",
     )
     add_button.grid(column=0, row=0, sticky="ew")
 
     save_layout_button = ttk.Button(
-        root, command=lambda: save_layout(boxes=boxes), text="Save list"
+        top_toolbar, command=lambda: save_layout(boxes=boxes), text="Save list"
     )
     save_layout_button.grid(column=1, row=0, sticky="ew")
 
     load_layout_button = ttk.Button(
-        root, command=lambda: load_layout(container=root, boxes=boxes), text="Load list"
+        top_toolbar,
+        command=lambda: load_layout(container=root, boxes=boxes),
+        text="Load list",
     )
     load_layout_button.grid(column=2, row=0, sticky="ew")
 
-    second_row_frame = ttk.Frame()
-    second_row_frame.grid(column=0, row=1, columnspan=3, padx=80, pady=5)
+    middle_toolbar = ttk.Frame()
+    middle_toolbar.grid(column=0, row=1, pady=5)
+    middle_toolbar.grid_columnconfigure(0, weight=1)
+    middle_toolbar.grid_columnconfigure(1, weight=1)
 
     pause_all_button = ttk.Button(
-        second_row_frame, command=lambda: pause_all(boxes), text="Pause all"
+        middle_toolbar, command=lambda: pause_all(boxes), text="Pause all"
     )
-    pause_all_button.grid(column=0, row=1, sticky="ew")
+    pause_all_button.grid(column=0, row=0, sticky="ew")
 
     stop_all_button = ttk.Button(
-        second_row_frame, command=lambda: stop_all(boxes), text="Stop all"
+        middle_toolbar, command=lambda: stop_all(boxes), text="Stop all"
     )
-    stop_all_button.grid(column=1, row=1, sticky="ew")
+    stop_all_button.grid(column=1, row=0, sticky="ew")
+
+    # scrollable canvas for soundboxes
+    canvas = tk.Canvas(root)
+    canvas.grid(row=2, column=0, sticky="nsew")
+    scrollbar = ttk.Scrollbar(root, orient="vertical", command=canvas.yview)
+    scrollbar.grid(row=2, column=1, sticky="ns")
+    canvas.configure(yscrollcommand=scrollbar.set)
+
+    # Inner frame inside canvas
+    scrollable_frame = ttk.Frame(canvas)
+    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+
+    def on_frame_configure(event):
+        canvas.configure(scrollregion=canvas.bbox("all"))
+
+    scrollable_frame.bind("<Configure>", on_frame_configure)
 
     root.mainloop()
 
