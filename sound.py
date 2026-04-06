@@ -34,7 +34,7 @@ class SoundBox:
         self.sound.set_media(self.media)
 
         self.box = ttk.Frame(parent_frame, padding=0)
-        self.box.grid(column=self.column, row=self.row, columnspan=3)
+        self.box.grid(column=self.column, row=self.row, columnspan=None)
 
         separator = ttk.Separator(self.box, orient="horizontal")
         separator.grid(row=0, column=0, columnspan=3, sticky="ew", pady=5)
@@ -102,11 +102,14 @@ class SoundBox:
         self.delete_button = tk.Button(
             self.box, text="X", fg="red", command=self.delete_self
         )
+
         self.delete_button.grid(row=4, column=4, padx=5)
 
         if volume is not None:
             self.apply_volume(volume)
             self.volume_bar.set(volume)
+        else:
+            self.apply_volume(100)  # test this
 
         if repeat is not None:
             self.repeat_var.set(value=repeat)
@@ -147,17 +150,13 @@ class SoundBox:
 
         if state == vlc.State.Playing:
             self.box.after(100, self.update_progress)
-            self.play_button.config(text="Pause")
-            self.play_button.config(command=self.pause_sound)
-
+            self.play_button.config(text="Pause", command=self.play_sound)
         elif state == vlc.State.Paused:
             self.box.after(100, self.update_progress)
-            self.play_button.config(text="Play")
-            self.play_button.config(command=self.play_sound)
+            self.play_button.config(text="Play", command=self.play_sound)
         else:
             self.progress_bar["value"] = 0
-            self.play_button.config(text="Play")
-            self.play_button.config(command=self.play_sound)
+            self.play_button.config(text="Play", command=self.play_sound)
             if self.repeat_var.get():
                 self.play_sound()
 

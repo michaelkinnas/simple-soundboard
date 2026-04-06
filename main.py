@@ -21,6 +21,8 @@ def add_sound(container, file_path, boxes, volume=None, repeat=None):
             boxes,
             col=0,
             row=len(boxes) + 2,
+            # col=len(boxes),
+            # row=0,
             volume=volume,
             repeat=repeat,
         )
@@ -83,6 +85,10 @@ def pause_all(boxes):
         item.pause_sound()
 
 
+def on_frame_configure(event, canvas):
+    canvas.configure(scrollregion=canvas.bbox("all"))
+
+
 def main():
     boxes = []
 
@@ -136,21 +142,23 @@ def main():
     )
     stop_all_button.grid(column=1, row=0, sticky="ew")
 
-    # scrollable canvas for soundboxes
     canvas = tk.Canvas(root)
     canvas.grid(row=2, column=0, sticky="nsew")
-    scrollbar = ttk.Scrollbar(root, orient="vertical", command=canvas.yview)
-    scrollbar.grid(row=2, column=1, sticky="ns")
-    canvas.configure(yscrollcommand=scrollbar.set)
 
-    # Inner frame inside canvas
+    vert_scrollbar = ttk.Scrollbar(root, orient="vertical", command=canvas.yview)
+    vert_scrollbar.grid(row=2, column=1, sticky="ns")
+    canvas.configure(yscrollcommand=vert_scrollbar.set)
+
+    hor_scrollbar = ttk.Scrollbar(root, orient="horizontal", command=canvas.xview)
+    hor_scrollbar.grid(row=3, column=0, sticky="ew")
+    canvas.configure(xscrollcommand=hor_scrollbar.set)
+
     scrollable_frame = ttk.Frame(canvas)
     canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 
-    def on_frame_configure(event):
-        canvas.configure(scrollregion=canvas.bbox("all"))
-
-    scrollable_frame.bind("<Configure>", on_frame_configure)
+    scrollable_frame.bind(
+        "<Configure>", func=lambda event: on_frame_configure(event, canvas)
+    )
 
     root.mainloop()
 

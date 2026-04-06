@@ -7,8 +7,3 @@ You need **Python 3** and **pip** installed:
 - Then install requirements with ```pip install -r requirements.txt```
 
 Finally you run it with ```python3 main.py```
-
-## Planned features
-- Save list also saves the volume level of each sound
-- Implement tab functionality for better organization when there are a lot of sounds
-
