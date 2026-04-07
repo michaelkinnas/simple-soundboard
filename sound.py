@@ -15,11 +15,14 @@ class SoundBox:
         row=0,
         volume=None,
         repeat=None,
+        reorganize_callback=None,
     ):
         self.filepath = filepath
         self.column = col
         self.row = row
         self.parent_list = parent_list
+
+        self.reorganize_callback = reorganize_callback
 
         self.instance = vlc.Instance()
 
@@ -33,38 +36,45 @@ class SoundBox:
         self.sound = self.instance.media_player_new()
         self.sound.set_media(self.media)
 
-        self.box = ttk.Frame(parent_frame, padding=0)
-        self.box.grid(column=self.column, row=self.row, columnspan=None)
+        # Tkinger widgets start here
+        self.box = tk.Frame(parent_frame, bd=2, relief="groove")
+        self.box.grid(
+            column=self.column, row=self.row, columnspan=None, padx=10, pady=5
+        )
 
-        separator = ttk.Separator(self.box, orient="horizontal")
-        separator.grid(row=0, column=0, columnspan=3, sticky="ew", pady=5)
+        # separator = ttk.Separator(self.box, orient="horizontal")
+        # separator.grid(row=0, column=0, columnspan=4, sticky="ew", pady=5)
 
-        self.sound_name = ttk.Label(self.box, text=self.file_name, width=35)
-        self.sound_name.grid(row=1, column=0, columnspan=3)
+        self.sound_name = ttk.Label(
+            self.box, text=self.file_name, wraplength=350, justify="left"
+        )
+        self.sound_name.grid(row=0, column=0, rowspan=None, columnspan=4, sticky="nsew")
 
         self.play_button = tk.Button(
             self.box,
             text="Play",
+            command=self.play_sound,
+            width=10,
+        )
+        self.play_button.grid(row=1, column=0, sticky="ew")
+        self.default_bg = self.play_button.cget("bg")
+        self.default_fg = self.play_button.cget("fg")
+        self.default_active_bg = self.play_button.cget("activebackground")
+        self.default_active_fg = self.play_button.cget("activeforeground")
+        self.play_button.config(
             bg="darkgreen",
             fg="white",
             activebackground="green",
             activeforeground="white",
-            command=self.play_sound,
-            width=10,
         )
-        self.play_button.grid(column=0, row=2, sticky="ew")
 
         self.stop_button = tk.Button(
             self.box,
             text="Stop",
-            bg="darkred",
-            fg="white",
-            activebackground="red",
-            activeforeground="white",
             command=self.stop_sound,
             width=10,
         )
-        self.stop_button.grid(column=1, row=2, sticky="ew")
+        self.stop_button.grid(row=1, column=1, sticky="ew")
 
         style = ttk.Style()
         style.configure("Thick.Horizontal.TProgressbar", thickness=10)
@@ -75,18 +85,18 @@ class SoundBox:
             mode="determinate",
             style="Thick.Horizontal.TProgressbar",
         )
-        self.progress_bar.grid(column=0, row=3, columnspan=2, sticky="ew")
+        self.progress_bar.grid(row=2, column=0, columnspan=2, sticky="ew")
 
         self.playing_time_text = ttk.Label(
             self.box, text=f"000.00 / {self.total_duration_sec:.2f}", anchor="e"
         )
-        self.playing_time_text.grid(column=0, row=4)
+        self.playing_time_text.grid(row=3, column=0)
 
         self.repeat_var = tk.BooleanVar(value=False)
         self.repeat_tick = ttk.Checkbutton(
             self.box, text="Repeat", variable=self.repeat_var
         )
-        self.repeat_tick.grid(column=1, row=4)
+        self.repeat_tick.grid(row=3, column=1)
 
         self.volume_var = tk.IntVar(value=100)
         self.volume_bar = tk.Scale(
@@ -97,13 +107,43 @@ class SoundBox:
             variable=self.volume_var,
             command=self.apply_volume,
         )
-        self.volume_bar.grid(column=2, row=2, rowspan=3)
+        self.volume_bar.grid(row=1, column=2, rowspan=3)
+
+        self.movement_buttons_frame = ttk.Frame(self.box)
+        self.movement_buttons_frame.grid(row=0, column=4, rowspan=4)
+
+        self.move_up_button = tk.Button(
+            self.movement_buttons_frame,
+            text="^",
+            command=lambda: reorganize_callback(self, self.parent_list, "up"),
+        )
+        self.move_up_button.grid(row=0, column=0)
+
+        self.move_down_button = tk.Button(
+            self.movement_buttons_frame,
+            text="v",
+            command=lambda: reorganize_callback(self, self.parent_list, "down"),
+        )
+        self.move_down_button.grid(row=1, column=0)
+
+        self.move_left_button = tk.Button(
+            self.movement_buttons_frame,
+            text="<",
+            command=lambda: reorganize_callback(self, self.parent_list, "left"),
+        )
+        self.move_left_button.grid(row=2, column=0)
+
+        self.move_right_button = tk.Button(
+            self.movement_buttons_frame,
+            text=">",
+            command=lambda: reorganize_callback(self, self.parent_list, "right"),
+        )
+        self.move_right_button.grid(row=3, column=0)
 
         self.delete_button = tk.Button(
-            self.box, text="X", fg="red", command=self.delete_self
+            self.movement_buttons_frame, text="X", fg="red", command=self.delete_self
         )
-
-        self.delete_button.grid(row=4, column=4, padx=5)
+        self.delete_button.grid(row=4, column=0)
 
         if volume is not None:
             self.apply_volume(volume)
@@ -122,6 +162,15 @@ class SoundBox:
             self.sound.stop()
 
         self.sound.play()
+        self.play_button.config(
+            bg=self.default_bg,
+            fg=self.default_fg,
+            activebackground=self.default_active_bg,
+            activeforeground=self.default_active_fg,
+        )
+        self.stop_button.config(
+            bg="darkred", fg="white", activebackground="red", activeforeground="white"
+        )
 
         # delay start
         self.box.after(100, self.update_progress)
@@ -129,6 +178,18 @@ class SoundBox:
     def stop_sound(self):
         self.repeat_var.set(0)
         self.sound.stop()
+        self.play_button.config(
+            bg="darkgreen",
+            fg="white",
+            activebackground="green",
+            activeforeground="white",
+        )
+        self.stop_button.config(
+            bg=self.default_bg,
+            fg=self.default_fg,
+            activebackground=self.default_active_bg,
+            activeforeground=self.default_active_fg,
+        )
 
     def pause_sound(self):
         self.sound.pause()
@@ -150,7 +211,7 @@ class SoundBox:
 
         if state == vlc.State.Playing:
             self.box.after(100, self.update_progress)
-            self.play_button.config(text="Pause", command=self.play_sound)
+            self.play_button.config(text="Pause", command=self.pause_sound)
         elif state == vlc.State.Paused:
             self.box.after(100, self.update_progress)
             self.play_button.config(text="Play", command=self.play_sound)

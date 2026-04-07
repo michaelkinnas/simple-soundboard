@@ -5,6 +5,91 @@ from sound import SoundBox
 import pickle
 
 
+# TODO: For the future refactor to cleaner code
+def reorganize_soundboxes(current_box, boxes, command="up"):
+    boxes_in_column = [box for box in boxes if box.column == current_box.column]
+    if command == "up":
+        if len(boxes_in_column) == 1:
+            return
+
+        if current_box.row == 0:
+            return
+
+        for box in boxes_in_column:
+            if box.row == current_box.row - 1:
+                box.row += 1
+
+        current_box.row -= 1
+
+    if command == "down":
+        if current_box.row == len(boxes_in_column) - 1:
+            return
+
+        for box in boxes_in_column:
+            if box.row == current_box.row + 1:
+                box.row -= 1
+
+        current_box.row += 1
+
+    if command == "right":
+        if len(boxes_in_column) == 1:
+            return
+
+        boxes_in_next_column = [
+            box for box in boxes if box.column == current_box.column + 1
+        ]
+
+        # get last row in next column
+        if len(boxes_in_next_column) == 0:
+            next_available_row = 0
+        else:
+            next_available_row = max(boxes_in_next_column, key=lambda x: x.row).row + 1
+
+        # move boxes below that sound up
+        for box in boxes_in_column:
+            if box.row > current_box.row:
+                box.row -= 1
+
+        current_box.row = next_available_row
+        current_box.column += 1
+
+    if command == "left":
+        # if it's the first column don't move
+        if current_box.column == 0:
+            return
+
+        boxes_in_next_column = [
+            box for box in boxes if box.column == current_box.column - 1
+        ]
+
+        boxes_in_right_column = [
+            box for box in boxes if box.column == current_box.column + 1
+        ]
+
+        # get last row in next column
+        if len(boxes_in_next_column) == 0:
+            next_available_row = 0
+        else:
+            next_available_row = max(boxes_in_next_column, key=lambda x: x.row).row + 1
+
+        # move boxes below that box up
+        for box in boxes_in_column:
+            if box.row > current_box.row:
+                box.row -= 1
+
+        # if column is left empty move boxes in right column left
+        if len(boxes_in_column) == 1:
+            for box in boxes_in_right_column:
+                box.column -= 1
+
+        current_box.row = next_available_row
+        current_box.column -= 1
+
+    # reposition widgets in the parent grid
+    for box in boxes:
+        box.box.grid(row=box.row, column=box.column)
+
+
 def get_file():
     file_path = filedialog.askopenfilename(
         title="Select a sound file",
@@ -13,18 +98,21 @@ def get_file():
     return file_path
 
 
-def add_sound(container, file_path, boxes, volume=None, repeat=None):
+def add_sound(
+    container, file_path, boxes, volume=None, repeat=None, row=None, column=None
+):
     if file_path:
         sound_box = SoundBox(
             container,
             file_path,
             boxes,
-            col=0,
-            row=len(boxes) + 2,
+            col=0 if column is None else column,
+            row=len(boxes) if row is None else row,
             # col=len(boxes),
             # row=0,
             volume=volume,
             repeat=repeat,
+            reorganize_callback=reorganize_soundboxes,
         )
         boxes.append(sound_box)
 
@@ -41,8 +129,9 @@ def save_layout(boxes):
             "file_path": soundbox.get_filepath() + "\n",
             "volume": soundbox.volume_var.get(),
             "repeat": soundbox.repeat_var.get(),
+            "row": soundbox.row,
+            "column": soundbox.column,
         }
-        print(settings)
         sounds.append(settings)
 
     file_path = filedialog.asksaveasfilename(
@@ -72,6 +161,8 @@ def load_layout(container, boxes):
                 boxes=boxes,
                 volume=sound["volume"],
                 repeat=sound["repeat"],
+                row=sound["row"],
+                column=sound["column"],
             )
 
 
@@ -122,7 +213,7 @@ def main():
 
     load_layout_button = ttk.Button(
         top_toolbar,
-        command=lambda: load_layout(container=root, boxes=boxes),
+        command=lambda: load_layout(container=scrollable_frame, boxes=boxes),
         text="Load list",
     )
     load_layout_button.grid(column=2, row=0, sticky="ew")
