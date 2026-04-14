@@ -244,6 +244,9 @@ class SoundBox:
         if hasattr(self, "parent_list") and self in self.parent_list:
             self.parent_list.remove(self)
 
-        for i, box in enumerate(self.parent_list):
-            box.row = i
-            box.box.grid(row=i)
+        idx = 0
+        for box in self.parent_list:
+            if box.column == self.column:
+                box.row = idx
+                box.box.grid(row=idx)
+                idx += 1
