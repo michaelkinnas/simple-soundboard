@@ -243,3 +243,7 @@ class SoundBox:
         # Remove from parent list
         if hasattr(self, "parent_list") and self in self.parent_list:
             self.parent_list.remove(self)
+
+        for i, box in enumerate(self.parent_list):
+            box.row = i
+            box.box.grid(row=i)
