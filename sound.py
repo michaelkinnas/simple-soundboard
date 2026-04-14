@@ -146,22 +146,22 @@ class SoundBox:
         self.delete_button.grid(row=4, column=0)
 
         if volume is not None:
-            self.apply_volume(volume)
-            self.volume_bar.set(volume)
+            # self.volume_bar.set(volume)
+            self.volume_var.set(volume)
         else:
-            self.apply_volume(100)  # test this
+            self.volume_var.set(100)  # test this
 
         if repeat is not None:
             self.repeat_var.set(value=repeat)
 
     def play_sound(self):
-        # set initial volume
-        self.apply_volume(self.volume_var.get())
-
         if self.sound.get_state() == vlc.State.Ended:
             self.sound.stop()
 
         self.sound.play()
+
+        self.box.after(50, lambda: self.apply_volume(self.volume_var.get()))
+
         self.play_button.config(
             bg=self.default_bg,
             fg=self.default_fg,
@@ -173,7 +173,7 @@ class SoundBox:
         )
 
         # delay start
-        self.box.after(100, self.update_progress)
+        self.box.after(30, self.update_progress)
 
     def stop_sound(self):
         self.repeat_var.set(0)
@@ -222,8 +222,15 @@ class SoundBox:
                 self.play_sound()
 
     def apply_volume(self, value):
-        if self.sound.get_state() != vlc.State.NothingSpecial:
-            self.sound.audio_set_volume(int(float(value)))
+        try:
+            if self.sound is not None:
+                state = self.sound.get_state()
+
+                # Only apply when player is usable
+                if state not in (vlc.State.NothingSpecial, vlc.State.Error):
+                    self.sound.audio_set_volume(int(float(value)))
+        except:
+            pass  # prevent VLC crashes from bubbling up
 
     def get_filepath(self):
         return self.filepath
